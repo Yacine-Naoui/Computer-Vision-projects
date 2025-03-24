@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Object Detection App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload-container {
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+        }
+        #uploadForm {
+            margin-bottom: 20px;
+        }
+        #imageContainer {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+        }
+        .image-box {
+            flex: 1;
+            margin: 10px;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+            max-height: 500px;
+            border: 1px solid #ddd;
+        }
+        #results {
+            margin-top: 20px;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Object Detection App</h1>
+        <div class="upload-container">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="imageInput" accept="image/*" required>
+                <button type="submit">Detect Objects</button>
+            </form>
+            <div class="loader" id="loader"></div>
+        </div>
+        
+        <div id="imageContainer">
+            <div class="image-box">
+                <h3>Original Image</h3>
+                <img id="originalImage" src="" style="display: none;">
+            </div>
+            <div class="image-box">
+                <h3>Processed Image</h3>
+                <img id="processedImage" src="" style="display: none;">
+            </div>
+        </div>
+        
+        <div id="results" style="display: none;">
+            <h3>Detection Results <span id="processingTime"></span></h3>
+            <table id="detectionsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Object</th>
+                        <th>Confidence</th>
+                        <th>Bounding Box (x1, y1, x2, y2)</th>
+                    </tr>
+                </thead>
+                <tbody id="detectionsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            // Display original image
+            const originalImage = document.getElementById('originalImage');
+            originalImage.src = URL.createObjectURL(file);
+            originalImage.style.display = 'block';
+            
+            // Hide previous results and show loader
+            document.getElementById('processedImage').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            // Send request
+            fetch('/detect', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                document.getElementById('loader').style.display = 'none';
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                // Display processed image
+                const processedImage = document.getElementById('processedImage');
+                processedImage.src = data.image;
+                processedImage.style.display = 'block';
+                
+                // Display processing time
+                document.getElementById('processingTime').textContent = 
+                    `(Processing Time: ${data.processing_time} seconds)`;
+                
+                // Display detections
+                const detectionsBody = document.getElementById('detectionsBody');
+                detectionsBody.innerHTML = '';
+                
+                data.detections.forEach((det, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${det.class}</td>
+                        <td>${(det.confidence * 100).toFixed(2)}%</td>
+                        <td>${det.bbox.join(', ')}</td>
+                    `;
+                    detectionsBody.appendChild(row);
+                });
+                
+                // Show results
+                document.getElementById('results').style.display = 'block';
+            })
+            .catch(error => {
+                document.getElementById('loader').style.display = 'none';
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
+</body>
+</html>

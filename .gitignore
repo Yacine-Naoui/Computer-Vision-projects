@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment directories
+venv/
+env/
+ENV/
+.venv/
+
+# Python installation directory (exclude Python binaries)
+Python-3.11.9/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Archive files
+*.tgz
+
+# (Optional) If you do not want to version the large model files, uncomment below:
+# yolov5s.pt
+ yolov8s.pt

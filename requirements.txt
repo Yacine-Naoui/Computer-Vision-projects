@@ -1,0 +1,16 @@
+# Common dependencies
+numpy
+opencv-python
+matplotlib
+
+# For HandWritten Digit Recognition Project
+pygame
+keras
+tensorflow  # Backend for Keras
+
+# For Object Detection App
+torch
+torchvision
+torchaudio
+ultralytics
+kivy
